@@ -6,7 +6,7 @@ import type * as Preset from '@docusaurus/preset-classic';
 
 const config: Config = {
   title: 'TresorOne',
-  tagline: 'A cross-platform desktop client for managing your Tresor LLM gateway.',
+  tagline: 'A cross-platform client for managing your Tresor LLM gateway.',
   favicon: 'img/favicon.ico',
 
   // GitHub Pages via `docusaurus deploy`

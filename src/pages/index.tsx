@@ -71,7 +71,7 @@ function HomePage() {
             <DocCard
               icon="📘"
               title="User Guide"
-              description="Get started, connect to a Tresor gateway, and manage providers, aliases, rules, logs, and settings through the desktop client."
+              description="Get started, connect to a Tresor gateway, and manage providers, aliases, rules, logs, and settings through the client."
               href="/TresorOne-docs/docs/user/getting-started/intro"
             />
           </div>

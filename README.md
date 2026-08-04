@@ -1,6 +1,6 @@
 # 📚 TresorOne Documentation
 
-User guide for [TresorOne](https://github.com/ladbaby/TresorOne) — a cross-platform Flutter desktop client for the [Tresor](https://github.com/ladbaby/Tresor) LLM gateway.
+User guide for [TresorOne](https://github.com/ladbaby/TresorOne) — a cross-platform Flutter client for the [Tresor](https://github.com/ladbaby/Tresor) LLM gateway.
 
 Built with [Docusaurus](https://docusaurus.io/). Deployed to [GitHub Pages](https://ladbaby.github.io/TresorOne-docs/).
 
