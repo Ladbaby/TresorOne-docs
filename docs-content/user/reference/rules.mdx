@@ -1,0 +1,121 @@
+---
+title: Rules
+description: Configure request transformation pipelines
+---
+
+# 📏 Rules
+
+A **rule** is an optional request-matching + transformation step. When traffic arrives, Tresor applies every rule whose matchers fit — the rules never override the resolved downstream; they only contribute to the **plugin pipeline** that runs before the request is forwarded.
+
+## 📐 Rules List Layout
+
+The Rules screen uses a `LayoutBuilder` to choose between two layouts at **600 logical pixels**:
+
+### 🖥️ Wide (≥ 600 px) — Data Table
+
+A scrollable `DataTable` with hover-highlighted rows:
+
+| Column | Content |
+|---|---|
+| **Name** | Rule display name |
+| **Path** | Pattern path (e.g. `*` for any path) |
+| **Model** | Optional model filter |
+| **Downstreams** | Comma-separated list of matched downstream names |
+| **Enabled** | Inline `Switch` + `StatusBadge` dot |
+| **Actions** | Edit + Delete buttons |
+
+### 📱 Narrow (< 600 px) — Card Stack
+
+Each rule becomes a `Card` with all fields laid out vertically and Edit/Delete buttons in the footer.
+
+## 🔧 Available Plugins Reference
+
+Below the rules table is a **read-only reference** section listing every plugin the daemon makes available:
+
+| Column | Content |
+|---|---|
+| **ID** | Plugin identifier (used in `pipeline_config`) — e.g. `openai2anthropic`, `custom_header`, `fix_anthropic_images` |
+| **Description** | One-line summary of what the plugin does |
+| (icon) | A small extension icon on each card |
+
+The catalog includes format converters for all supported API formats, header injectors, image-fixers, and other middleware. Tap any row to see its default config schema (rendered inline as JSON).
+
+> **Tip:** See the dedicated [Plugins](plugins) page for a quick-reference landing that surfaces common plugin IDs without forcing you to open the Rules form first.
+
+## 📋 Rule Form
+
+The form scrolls vertically and is divided into five sections:
+
+### 🪪 Basic Configuration
+
+| Field | Required | Notes |
+|---|---|---|
+| 🏷️ **Name** | ✅ Yes | Display name for the rule |
+| 🛣️ **Pattern Path** | ✅ Yes | URL pattern (default `*`); supports `*` glob semantics. Help tooltip shows examples. |
+| 🤖 **Pattern Model** | ◯ Optional | Optional model filter — leave empty to match any model |
+
+### 🎯 Match Format
+
+`SectionHeader` + `_FormatChips` — multi-select `FilterChip`s for the four input request formats (OpenAI / OpenAI Responses / Anthropic / Gemini) with vendor icons.
+
+### 🔌 Match Downstream Format
+
+Same chip pattern, but matching the **downstream's** declared format instead of the request's. Useful for rules like "when forwarding to an Anthropic downstream, always X".
+
+### 🔗 Match Downstreams
+
+`SectionHeader` + `_MultiSelectChips` — downstream name chips. Multi-select; an empty selection means "any downstream".
+
+### ⚙️ Pipeline Configuration
+
+`SectionHeader` + `_PipelineConfigEditor`. This is where you chain **transformer plugins** that run in order before the request is forwarded.
+
+#### Per-step UI
+
+Each `_PipelineStepCard` renders:
+
+- 🔢 **Numbered circle badge** — the step's 1-based position
+- 🛠️ **Plugin `DropdownButtonFormField`** — sourced from the server's plugin catalog
+- ✏️ **Config form** — dynamically generated from the plugin's `configSchema`. For example, `custom_header` shows key/value pairs; `fix_anthropic_images` shows a single toggle.
+- 🗑️ **Remove step button** — only present when the step is not the last one
+
+Empty state:
+
+> ⓘ **No pipeline steps configured**
+> Add a step to transform or augment the request before it reaches the downstream.
+
+#### Add step
+
+A `FilledButton.tonalIcon` labeled **Add Step** appends a new step card at the bottom of the list. New steps default to the first plugin in the catalog.
+
+### Action Row
+
+- ↩️ **Cancel** — `OutlinedButton`, pops the route
+- ✅ **Create / Save** — `FilledButton`, triggers `_save()`
+
+## 🧪 Plugin Pipeline Semantics
+
+- ➕ Rules **add** transformer steps to the implicit pipeline; they never override the resolved downstream.
+- 🔗 Multiple rules can match a single request; their pipelines are concatenated in priority order.
+- 🎯 Priority: exact path+model > exact path > wildcard path (`*`).
+- ↩️ Each transformer runs sequentially; failures bubble up and the request fails fast.
+
+The exact plugin IDs and config schemas are fetched live from `/api/plugins` whenever the form opens, so newly installed plugins on the daemon side show up here without app updates.
+
+## 🔗 Routes
+
+| Path | What Loads |
+|---|---|
+| `/rules` | List view |
+| `/rules/new` | Empty form (Mode A — New Rule) |
+| `/rules/:id` | Form pre-populated with the rule (editing Mode B) |
+
+## 🗑️ Deletion
+
+The delete button on each row opens `ConfirmDialog`. Confirming sends the DELETE call and removes the rule from the table; the daemon also strips the rule from any in-memory request-resolution state immediately.
+
+## 🌐 Related
+
+- 🔌 [Plugins](plugins) — quick reference for plugin IDs and config schemas
+- 📺 [Logs](logs) — watch rules in action by inspecting the live request stream
+- 🔌 [Downstreams](downstreams) — matchers reference the downstream inventory

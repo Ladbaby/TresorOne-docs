@@ -1,0 +1,175 @@
+---
+title: Settings
+description: Configure global daemon behavior and app preferences
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# ⚙️ Settings
+
+The Settings screen is the global control plane for both the Tresor daemon (everything it forwards and how) and the TresorOne app (theme, autolaunch, default tab). Changes persist to the daemon's YAML config or to `SharedPreferences` automatically — no restart needed.
+
+The mobile dashboard hides Settings in the bottom nav and exposes a **More** section containing Logs, About, and Settings instead. All the controls themselves are identical.
+
+## 📑 Sub-Sections
+
+| Route | What it controls |
+|---|---|
+| `/settings/basic-configuration` | Outbound proxy, log level, payload capture, retry-on-empty |
+| `/settings/authentication` | Proxy API keys + admin password |
+| `/settings/theme` | Theme mode, pure-black, color palette, text size |
+| `/settings/application` | Haptic feedback, auto-launch, silent launch, default tab (desktop) |
+
+The remainder of this page documents all four sub-sections in order.
+
+---
+
+## 🛠️ Basic Configuration
+
+### 🌐 Outbound Proxy
+
+`ProxyModeControl` — dropdown with four options. Controls how the daemon reaches downstream providers (OpenAI, Anthropic, etc.):
+
+| Option | Behaviour |
+|---|---|
+| **Auto** | Try Windows system proxy first, then environment variables (`HTTP_PROXY` / `HTTPS_PROXY`), then direct connection |
+| **Environment Variables Only** | Use `HTTP_PROXY` / `HTTPS_PROXY` only — fall back to direct if unset |
+| **Windows System Proxy + Env Fallback** | Same as Auto, but explicitly invokes the Windows registry on Windows builds |
+| **None** | Always direct connection; ignore system + environment proxy settings |
+
+Contextual help text below the dropdown explains each mode's behaviour. The setting persists to the daemon config immediately.
+
+### 📃 Log Level
+
+`LogLevelControl` — dropdown bound to the daemon's `log_level` field:
+
+- 🪲 **Debug** — every request + transformer step
+- ℹ️ **Info** (default) — request line + outcome + duration
+- ⚠️ **Warn** — only warnings and errors
+- ❌ **Error only** — errors only
+
+### 📦 Payload Capture
+
+`PayloadCaptureControl` — `SwitchListTile` toggling `capture_payloads`:
+
+- ✅ **Enabled** — the daemon buffers the most recent 100 request/response bodies (~1 MiB each direction), making the [Logs inspector](../reference/logs.mdx) usable
+- ❌ **Disabled** (default) — no capture; the inspector renders 404 for every entry
+
+Disabled when disconnected (you can't change daemon settings while the JWT is invalid).
+
+### 🔁 Retry on Empty Response
+
+`RetryControl` — `SwitchListTile` toggling `retry_on_empty`:
+
+- ✅ **Enabled** — when the downstream returns HTTP 200 but produces no content (e.g. thinking-only reasoning), retry up to 3 times with exponential backoff. Retries are transparent to the client.
+- ❌ **Disabled** (default) — pass the empty response straight back to the client
+
+> **Tip:** Non-200 responses (4xx, 5xx) are **never** retried, regardless of this setting. Only truly empty 200s.
+
+---
+
+## 🔐 Authentication
+
+### 🪪 Proxy API Keys
+
+`ProxyApiKeysControl` — dynamic list of `TextField`s for `proxy_api_keys`. Each row is one Bearer token that clients must present on inbound requests.
+
+- ➕ **Add** appends a new row
+- 🗑️ Trash-can icon on each row removes it (after the save call)
+- 💾 **Save** writes the whole array back to the daemon's config via `PUT /api/config`
+
+Leave the list empty to allow all traffic through without authentication.
+
+### 🔑 Admin Password
+
+`AdminPasswordControl` — two `TextField`s (password + confirm, obscured) plus a **Change** `FilledButton` and an optional **Require password** checkbox:
+
+| Action | Result |
+|---|---|
+| ✅ Change | Calls `changeAdminPassword()` — the daemon logs out the current session and starts using the new credential. TresorOne transparently re-authenticates on the next admin call. |
+| ❌ Uncheck "Require password" + Save | Disables admin authentication entirely. Anyone with network access to the daemon can manage it. |
+| ✅ Check + Save with a new password | Re-enables authentication with a fresh credential |
+
+:::caution
+Disable admin authentication only on isolated LANs. Any deployment reachable from the internet **must** keep a strong password set.
+:::
+
+---
+
+## 🎨 Theme
+
+### 🌗 Theme Mode
+
+`ThemeControl` — three selectable cards with icons:
+
+| Mode | Behaviour |
+|---|---|
+| 🌅 **Auto** | Follow the OS / browser `prefers-color-scheme` setting |
+| ☀️ **Light** | Always light theme |
+| 🌙 **Dark** | Always dark theme |
+
+### 🖤 Pure Black Mode
+
+A `Switch` that, when on, replaces every `#000` near-black surface with `#000` exactly — gives an OLED-friendly pure-black background in dark mode.
+
+### 🎨 Theme Color
+
+`ColorSchemeSwatch` grid — circular swatches showing primary / secondary / tertiary previews. 3 to 6 columns depending on the available width. Tap a swatch to apply it; the change is instant across the app.
+
+### 🔠 Text Size
+
+A `Slider` from **0.8×** to **1.4×** with a numeric label. The change applies to the running app immediately (Flutter re-renders with the new scale factor).
+
+---
+
+## 🖥️ Application
+
+> **Note:** All controls in this section are **desktop only**. On mobile, the entire **Application** page is hidden from Settings.
+
+### 📳 Haptic Feedback
+
+`SwitchListTile` — toggles `feedBack()` calls on tap. When enabled, choosing controls, dragging items, and confirming destructive actions trigger a short vibration on devices with haptic hardware.
+
+### ⏰ Auto Launch
+
+`SwitchListTile` — registers the app to start on login:
+
+| Platform | Implementation |
+|---|---|
+| 🪟 **Windows** | Scheduled task at `%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup\` |
+| 🍎 **macOS** | `launch_at_startup` package's LaunchAtLogin helper (`~/Library/LaunchAgents`) |
+| 🐧 **Linux** | `.desktop` file at `~/.config/autostart/` |
+
+### 🤫 Silent Launch
+
+`SwitchListTile` — when on, the next launch starts hidden in the system tray. A snackbar appears after saving to explain the new behaviour ("Next start will be silent — find the app in the system tray").
+
+### 🪟 Default Tab
+
+`DefaultTabControl` — `DropdownButtonHideUnderline` picker with options: **Downstreams**, **Aliases**, **Rules**, **Plugins** (desktop only), **Logs**, **Settings**, **About**. Persisted to `SharedPreferences`. After a restart, the dashboard opens to the chosen tab.
+
+---
+
+## 🔁 Persistence Model
+
+| Setting | Persisted Where |
+|---|---|
+| Outbound proxy mode | Daemon YAML config (atomic write) |
+| Log level | Daemon YAML config |
+| Payload capture | Daemon YAML config |
+| Retry on empty | Daemon YAML config |
+| Proxy API keys | Daemon YAML config |
+| Admin password | Daemon config + TresorOne secure storage (for known-remote resume) |
+| Theme mode / pure-black / palette / text size | `SharedPreferences` |
+| Haptic feedback / auto-launch / silent-launch / default tab | `SharedPreferences` (desktop) |
+
+:::tip
+Settings that touch the daemon go through `PUT /api/config` so the change takes effect without a restart. If you edit the daemon's YAML directly, the next mutation through the UI will overwrite your manual edit (comments are not preserved, per the Tresor YAML write-back contract).
+:::
+
+## 🔗 Related
+
+- 📺 [Logs](../reference/logs.mdx) — paired with payload capture, the Logs inspector is the most common reason to visit Settings
+- 🔌 [Downstreams](../reference/downstreams.mdx) — proxy mode affects how every downstream request is routed
+- 🔌 [Connection Modes → Admin Password](../getting-started/connection-modes.mdx) — how TresorOne handles the password you set here

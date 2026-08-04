@@ -1,0 +1,160 @@
+---
+title: Installation
+description: Install TresorOne on your platform
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# 📦 Installation
+
+TresorOne is distributed as a single Flutter app with platform-specific installers. All builds are produced from one codebase and deployed to GitHub Releases.
+
+## 📥 Install from Release
+
+### Pick your platform
+
+<Tabs>
+  <TabItem value="windows" label="Windows">
+    Download the latest `.exe` installer from [GitHub Releases](https://github.com/ladbaby/TresorOne/releases). The installer places the app under `%LOCALAPPDATA%\Programs\TresorOne\` and adds a Start Menu + desktop shortcut. Updates install over the same directory.
+
+    If Windows SmartScreen blocks the first launch, click **More info → Run anyway**.
+  </TabItem>
+  <TabItem value="macos" label="macOS">
+    Download the latest `.dmg` from [GitHub Releases](https://github.com/ladbaby/TresorOne/releases), open it, and drag **TresorOne** to your **Applications** folder.
+
+    The first launch may require **right-click → Open** to bypass the unidentified developer prompt. Subsequent launches work normally.
+  </TabItem>
+  <TabItem value="linux" label="Linux">
+    Download the latest `.deb` (Debian/Ubuntu), `.rpm` (Fedora/RHEL), or `.AppImage` (universal) from [GitHub Releases](https://github.com/ladbaby/TresorOne/releases).
+
+    For `.deb` / `.rpm`, install with your package manager:
+
+    ```bash
+    # Debian / Ubuntu
+    sudo dpkg -i tresorone_x.y.z_amd64.deb
+
+    # Fedora / RHEL
+    sudo rpm -i tresorone-x.y.z.x86_64.rpm
+    ```
+
+    For `.AppImage`, mark it executable and run:
+
+    ```bash
+    chmod +x TresorOne-x.y.z-x86_64.AppImage
+    ./TresorOne-x.y.z-x86_64.AppImage
+    ```
+  </TabItem>
+  <TabItem value="android" label="Android">
+    Download the latest `.apk` from [GitHub Releases](https://github.com/ladbaby/TresorOne/releases) and sideload it on your device.
+
+    ```bash
+    adb install -r tresorone-x.y.z-release.apk
+    ```
+
+    :::tip
+    Enable **Install unknown apps** for the file manager or browser you sideload from. Most launchers will guide you there automatically when you open the APK.
+    :::
+  </TabItem>
+  <TabItem value="ios" label="iOS">
+    Download the latest `.ipa` from [GitHub Releases](https://github.com/ladbaby/TresorOne/releases). To install outside the App Store you need [TestFlight](https://developer.apple.com/testflight/) or a tool like [AltStore](https://altstore.io/).
+
+    For TestFlight builds, request access via the GitHub issue tracker.
+  </TabItem>
+</Tabs>
+
+## Build from Source
+
+For developers contributing patches, or when you need the latest unreleased changes:
+
+### Prerequisites
+
+- 🦋 **Flutter 3.27+** with Dart 3.12+
+- 🛠️ Platform toolchain — Xcode (macOS/iOS), Android Studio + SDK (Android), Visual Studio 2022 with the **Desktop development with C++** workload (Windows), or `clang` and GTK dev packages (Linux)
+
+### Clone & run
+
+```bash
+git clone https://github.com/ladbaby/TresorOne.git
+cd TresorOne
+flutter pub get
+dart run build_runner build
+flutter run -d <device-id>      # e.g. -d windows, -d macos, -d linux
+```
+
+### Build a release artifact
+
+<Tabs>
+  <TabItem value="windows" label="Windows">
+    ```bash
+    flutter build windows --release
+    # Output: build/windows/runner/Release/tresor_one.exe
+    ```
+  </TabItem>
+  <TabItem value="macos" label="macOS">
+    ```bash
+    flutter build macos --release
+    # Output: build/macos/Build/Products/Release/TresorOne.app
+    ```
+  </TabItem>
+  <TabItem value="linux" label="Linux">
+    ```bash
+    flutter build linux --release
+    # Output: build/linux/x64/release/bundle/tresor_one
+    ```
+  </TabItem>
+  <TabItem value="android" label="Android">
+    ```bash
+    flutter build apk --release
+    # Output: build/app/outputs/flutter-apk/app-release.apk
+    ```
+  </TabItem>
+</Tabs>
+
+## 📂 Where TresorOne Stores Data
+
+TresorOne uses standard Flutter conventions for app data:
+
+| Data | Location |
+|---|---|
+| Known remotes | Encrypted via `flutter_secure_storage` (Keychain / Keystore / libsecret / DPAPI depending on platform) |
+| Theme / palette / text size / default tab | `SharedPreferences` |
+| Log buffer (in-memory) | RAM only — lost on app close |
+| Local-mode daemon artifacts | `path_provider` `getApplicationSupportDirectory()` |
+
+The Tresor daemon itself stores its config + SQLite DB wherever the original Tresor install put them — TresorOne never writes to those locations directly; it always goes through the daemon's REST API.
+
+## 🚀 First Run
+
+When you launch TresorOne for the first time, the **Connect** screen offers two modes:
+
+- 🚀 **Default (Local Mode)** — one-click: download the Tresor binary from GitHub Releases, auto-generate a YAML config, spawn the daemon as a child process, and auto-connect
+- ☁️ **Advanced (Remote Connection)** — enter an endpoint (`http://127.0.0.1:11510`) and an admin password to connect to any running Tresor daemon
+
+See [Connection Modes](connection-modes) for the full walkthrough of both flows.
+
+## ℹ️ Version Info
+
+Open **Settings → About** to see:
+
+- 🔖 **App version** — sourced from `--dart-define=APP_VERSION` at compile time, falling back to the value in `pubspec.yaml`
+- 🛠️ **Build information** — Flutter SDK version, Riverpod version, go_router version, and Material Design version
+- 🔗 **Links** — Tresor + TresorOne GitHub repos
+
+## 🆘 Troubleshooting
+
+### Windows SmartScreen blocks the installer
+
+> **Tip:** Click **More info → Run anyway**. The installer is unsigned in development builds; release builds are signed before being attached to a GitHub Release.
+
+### macOS says the app is from an unidentified developer
+
+> **Tip:** Right-click the `.app` in Finder, choose **Open**, then confirm in the prompt. After the first open, double-clicking works normally.
+
+### Linux: missing GTK / AppImage launcher
+
+> **Tip:** The `.AppImage` needs `fuse2` to be installed. On Debian/Ubuntu: `sudo apt install libfuse2`. Alternatively, use the `.deb` or `.rpm` package.
+
+### App is sluggish on first launch
+
+> **Tip:** TresorOne performs initialization (loading plugin metadata, refreshing the secure-storage cache, etc.) on startup. Subsequent launches reuse cached state and are noticeably faster.

@@ -1,0 +1,148 @@
+---
+title: Aliases
+description: Map model names to backends with hot-switching aliases
+---
+
+# 🏷️ Aliases
+
+An **alias** maps a model name that your apps send (e.g. `gpt-4o`) to whatever downstream + output model you want behind it (e.g. Anthropic `claude-sonnet-5`). Aliases are grouped by **input model**, so a single group can map the same input to many outputs and you can hot-switch between them with one tap.
+
+## 📐 Alias Group Layout
+
+The Aliases page is a `ReorderableListView.builder` — drag any group's header to reorder. Each `_AliasGroupSection` is collapsible:
+
+### Collapsed
+
+Header card only, showing:
+
+- 🟢 `ModelIcon`
+- 🏷️ **Group name** (the input model ID)
+- 🟣 **Regex pill** — purple "regex" badge appears when the group has `is_regex: true`
+- 🔢 **Option count**
+- ⚙️ **Option** text button (opens the form to add a new option to this group)
+- 🗑️ Delete button (cascade-removes the whole group)
+- ☰ Drag handle
+
+### Expanded
+
+The header expands to reveal:
+
+- 🟣 **`_AnnouncedNamesEditor`** (only when `is_regex: true`)
+- 📐 **Option grid** — `Wrap` layout with `ConstrainedBox` tiles targeting 280 px wide, yielding 1–6 columns depending on screen width
+
+## 🟣 Regex Aliases & Announced Names
+
+When `is_regex` is enabled on a group, every incoming request whose model name matches the regex pattern is eligible for routing through this group. Adjacent to the header is the **Announced Names editor** — a way to publish multiple "names" for the model so clients can ask for any of them.
+
+| Element | Description |
+|---|---|
+| Label | "Announced Names" with a tooltip explaining how regex matching works |
+| 🏷️ Existing names | Accent-filled rounded pills; × on each removes it |
+| ➕ Add Name button | Reveals an inline `TextField` + **Add** FilledButton + **Cancel** TextButton |
+| ⚠️ Validation | Error renders below the input row in red |
+
+Updates are **optimistic** — local state changes immediately, and if the server call fails the change rolls back with a snackbar.
+
+## 🧱 Option Cards
+
+Each `_AliasOptionCard` is a toggleable card representing one downstream + output-model pair for the input model.
+
+### Active state
+
+- 🟦 **Filled accent background** + accent border
+- ⭐ First row: large `ModelIcon` + output model ID (bold monospace)
+- 🏷️ Second row: provider `ModelIcon` at 70% opacity + downstream name
+
+### Inactive state
+
+- ⬜ Tinted surface + grey border
+- Same row layout, but no accent fill
+
+### Actions
+
+- 👆 **Tap an inactive card** — activates the alias (`activate()` deactivates its siblings in the same group)
+- ❌ **Tap the × button** on the active card — deletes the alias (opens `ConfirmDialog`); if it was the only option in the group, a sibling is auto-promoted to active
+
+> **Tip:** A group always has at most one active option. Promoting an option deactivates every other option in the same group so the next incoming request for that input model resolves to exactly one downstream.
+
+## 📋 Alias Form (3 Modes)
+
+`AliasFormScreen` (`/aliases/new`, `/aliases/new?inputModel=...`, `/aliases/:id`) handles three flows from a single widget tree, distinguished by its constructor args:
+
+### Mode A — New Group
+
+`existing=null`, `prefilledInputModelId=null`
+
+- 🔤 Full `TextFormField` for **Input Model ID** (the model name your apps send)
+- 🏷️ **Downstream dropdown**
+- 📦 **Output Model multi-select grid** (or free-text fallback if the selected downstream has no known models)
+
+### Mode B — Edit Alias
+
+`existing=Alias`
+
+- 🔒 **Input Model** is read-only with a lock icon + explanatory subtitle
+- 🏷️ **Downstream dropdown** (preselected to this alias's downstream)
+- 📦 **Output Model grid** (single-select — only this alias's output is highlighted)
+
+### Mode C — Add to Existing Group
+
+`existing=null`, `prefilledInputModelId=String` (querystring)
+
+- 🔒 **Input Model** pre-filled and read-only
+- 🏷️ **Downstream dropdown**
+- 📦 **Output Model grid** (multi-select — adds a new option to an existing group)
+
+## 🎯 Output Model Field
+
+The **Output Model** picker adapts to what the selected downstream has:
+
+### Downstream has known models
+
+Responsive card grid with tiles targeting 240 px wide (up to 2 per row at desktop widths, more on mobile). Each tile shows:
+
+- 🟢 `ModelIcon` + model ID
+- 🏷️ Provider downstream name
+- ✅ Checkbox indicator for selection state
+
+### Downstream has no known models (or none selected)
+
+Free-text `_OutputModelTextField` — multi-line, one model ID per line. Use this when the upstream API didn't expose a `/models` endpoint or you want to plug in an ID that isn't in the catalog.
+
+### Validation summary
+
+Beneath the picker, a single helper line tells you the current state:
+
+- ⚠️ Red — "Select one or more models above"
+- ℹ️ Muted — "N selected: model-a, model-b, …"
+
+The form also stores the chosen IDs in a hidden `FormField` so the regular `Form.validate()` flow picks them up.
+
+## 🪄 Drag-and-Drop Reorder
+
+`ReorderableListView.builder` lets you reorder groups by long-press + drag. The new ordering is pushed to the server immediately, and the change survives across app restarts because it lives in the YAML config.
+
+> **Tip:** Reordering is by group, not by option within a group. To change which downstream is "active" for a model, tap an inactive option card instead of dragging.
+
+## 🌐 Icon Resolution
+
+Like the Downstreams page, alias cards resolve `ModelIcon` through the daemon first, fall back to `IconRegistry`, and finally to a generic Material icon. New aliases default to `auto_awesome_outlined` until you activate or render them at least once.
+
+## ⚡ Hot-Switching Tips
+
+- Switching the active option **takes effect immediately** — no daemon restart, no client reload. The next incoming request for that input model resolves to the new downstream.
+- Multiple groups can match the same input model (e.g. an exact match `claude-opus-4-8` and a regex `claude-.*`). Tresor resolves in priority order — exact first, then regex.
+- A group with no active option silently fails over to direct routing via downstream `output_model_ids`, so you can leave groups in an "unwired" state without breaking traffic.
+
+## 🗑️ Deletion Behavior
+
+| Action | Cascade |
+|---|---|
+| Delete option | If it was the active option and the group has siblings, the next sibling auto-promotes to active. No traffic interruption. |
+| Delete group | Removes every option for that input model. Future requests for the input model fall back to direct routing by `output_model_ids`. |
+| Delete downstream (from the Downstreams page) | Cascades into aliases — any option pointing at that downstream is removed. |
+
+## 🔗 Related
+
+- 🔌 [Downstreams](downstreams) — provider endpoints that aliases route to
+- 📏 [Rules](rules) — request-transformation pipelines that layer on top of aliases
