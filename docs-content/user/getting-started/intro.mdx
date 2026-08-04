@@ -5,7 +5,7 @@ description: What is TresorOne?
 
 # 🖥️ TresorOne
 
-**A cross-platform Flutter client for the Tresor LLM gateway.** TresorOne gives you a dedicated desktop and mobile app for managing downstreams, aliases, rules, plugins, logs, and settings — without ever opening a terminal or a browser tab.
+**A cross-platform desktop client for the Tresor LLM gateway.** TresorOne gives you a dedicated desktop and mobile app for managing providers, aliases, rules, plugins, logs, and settings — without ever opening a terminal or a browser tab.
 
 ## At a Glance
 
@@ -13,36 +13,36 @@ TresorOne is the **admin front-end** for [Tresor](https://github.com/ladbaby/Tre
 
 | Component | What It Does |
 |---|---|
-| **Tresor daemon** | 🖥️ Long-running HTTP gateway + admin REST API + embedded web UI |
-| **TresorOne** | 📱 Cross-platform desktop / mobile client that talks to the daemon's admin REST API |
+| **Tresor gateway** | 🖥️ Long-running service that receives LLM requests, routes them to the right provider, and returns the response |
+| **TresorOne** | 📱 Cross-platform app that connects to the gateway over the network to manage everything |
 
 ```
 ┌──────────────────┐        ┌──────────────────┐        ┌────────────────┐
-│     TresorOne    │ ─────▶ │   Tresor daemon  │ ─────▶ │  LLM Providers │
-│   (Flutter app)  │ admin  │   (HTTP + JWT)   │ proxy  │  OpenAI,       │
+│     TresorOne    │ ─────▶ │   Tresor gateway │ ─────▶ │  LLM Providers │
+│       (app)      │  admin  │   (the service)  │ proxy  │  OpenAI,       │
 │                  │ ◀───── │                  │ ◀───── │  Anthropic…    │
-└──────────────────┘   REST └──────────────────┘        └────────────────┘
+└──────────────────┘         └──────────────────┘        └────────────────┘
 ```
 
 ## 🤔 Why TresorOne?
 
-- 💻 **A real native client** — built with Flutter so it installs as a first-class desktop or mobile app, not a browser tab
-- 🪟 **Cross-platform** — Windows, macOS, Linux, iOS, and Android from one codebase
-- 🚀 **Two connection modes** — one-click Local Mode (downloads the daemon, configures it, and connects) or Remote Mode (point at any Tresor daemon by host:port + JWT)
+- 💻 **A real native client** — installs as a first-class desktop or mobile app, not a browser tab
+- 🪟 **Cross-platform** — Windows, macOS, Linux, iOS, and Android
+- 🚀 **Two connection modes** — one-click Local Mode (downloads the gateway, configures it, and connects) or Remote Mode (point at any Tresor gateway by host:port + password)
 - 🧩 **Familiar editor patterns** — master-detail panes, swipe-to-delete chips, drag-and-drop alias reordering, tabs in forms, inline-editable text fields
-- 📺 **Live log inspector** — SSE-backed viewer with Parsed + Raw tabs for captured request/response payloads
+- 📺 **Live log inspector** — real-time viewer with Parsed + Raw tabs for captured request/response payloads
 - 🎨 **Polished UI** — light / dark / pure-black themes, color palette picker, and adjustable text size
 
-> **Note:** TresorOne does not host or proxy LLM requests itself. All traffic is routed through the Tresor daemon — TresorOne is purely a management client.
+> **Note:** TresorOne does not host or proxy LLM requests itself. All traffic is routed through the Tresor gateway — TresorOne is purely a management client.
 
 ## ✨ Core Features
 
-- 🔌 **Downstream management** — CRUD for LLM provider endpoints with inline-editable detail pane, swipe-to-delete models, fetch-models dialog, and API format multi-select (OpenAI / OpenAI Responses / Anthropic / Gemini)
+- 🔌 **Provider management** — add, edit, and remove LLM provider endpoints with an inline-editable detail pane, swipe-to-delete models, fetch-models dialog, and API format multi-select (OpenAI / OpenAI Responses / Anthropic / Gemini)
 - 🏷️ **Aliases with hot-switching** — model routing rules grouped by input model, with regex support, announced-name editor, drag-and-drop reorder, and one-tap activation
 - 📏 **Rules & plugin pipelines** — define request transformation pipelines by chaining built-in plugins; full table view with enable/disable toggles
-- 📺 **Real-time log stream** — SSE-backed log viewer with level/method/status badges, free-text filter, pause/clear, auto-scroll, and a payload inspector with a Parsed view for system / tools / messages content blocks
+- 📺 **Real-time log stream** — live viewer with level/method/status badges, free-text filter, pause/clear, auto-scroll, and a payload inspector with a Parsed view for system / tools / messages content blocks
 - ⚙️ **Settings & theme** — proxy mode, log level, payload capture, retry-on-empty, admin password, proxy API keys, theme mode + palette + text size, and desktop-specific launch preferences (auto-launch, silent launch, system tray)
-- 💾 **Persistence** — known remotes are stored securely across sessions; theme, palette, text size, and default tab persist via shared preferences
+- 💾 **Persistence** — saved connections are remembered across sessions; theme, palette, text size, and default tab persist locally
 - 🪟 **System tray on desktop** — minimize to tray, left-click restore, context menu (Show / Exit), and auto-reconnect on window focus
 
 ## 🖥️ Supported Platforms
@@ -57,17 +57,9 @@ TresorOne is the **admin front-end** for [Tresor](https://github.com/ladbaby/Tre
 
 ## 🔄 How a Typical Workflow Looks
 
-1. 🚀 **Launch TresorOne** — pick **Local Mode** on a fresh install for a one-click setup, or **Remote Mode** if you already have a Tresor daemon running on another machine
-2. 🔌 **Add a downstream** — fill in name, base URL, API key, pick the API format(s), and (optionally) hit **Fetch Models** to discover the upstream's catalog
-3. 🏷️ **Define aliases** — map the model names your apps send (e.g. `gpt-4o`) to whatever downstream model you want behind them (e.g. `claude-sonnet-5`); use a regex alias to catch whole model families
-4. 📏 **Configure rules** *(optional)* — chain plugins to transform request headers or bodies before they hit the downstream
-5. 📺 **Watch logs** — see every request come in, what downstream it landed on, how long it took, and click any row to inspect the captured raw payload
+1. 🚀 **Launch TresorOne** — pick **Local Mode** on a fresh install for a one-click setup, or **Remote Mode** if you already have a Tresor gateway running on another machine
+2. 🔌 **Add a provider** — fill in name, base URL, API key, pick the API format(s), and (optionally) hit **Fetch Models** to discover the upstream's catalog
+3. 🏷️ **Define aliases** — map the model names your apps send (e.g. `gpt-4o`) to whatever model you want behind them (e.g. `claude-sonnet-5`); use a regex alias to catch whole model families
+4. 📏 **Configure rules** *(optional)* — chain plugins to transform request headers or bodies before they hit the provider
+5. 📺 **Watch logs** — see every request come in, what provider it landed on, how long it took, and click any row to inspect the captured raw payload
 6. ⚙️ **Tweak settings** — adjust proxy mode, payload capture, theme, or admin password from the Settings page
-
-## 🏗️ Key Design Decisions
-
-- 🦋 **Flutter** — single codebase for all six platforms; state management via **Riverpod**, routing via **go_router**, HTTP via `http` with auto-refresh on 401
-- 🎨 **Material Design 3** — typography, components, and color system aligned with M3 conventions, including dark mode and pure-black mode
-- 🔌 **Stateless services** — `LocalModeService`, `AuthService`, `DownstreamService`, etc. wrap the daemon's REST API and are injected into Riverpod providers
-- 🔐 **Secure storage** — admin passwords are stored via `flutter_secure_storage` (Keychain on macOS/iOS, Keystore on Android, libsecret on Linux, DPAPI on Windows)
-- 🧩 **Code generation** — `json_serializable` and `riverpod_generator` produce `.g.dart` files for all models and providers

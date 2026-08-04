@@ -24,15 +24,8 @@ const sidebars: SidebarsConfig = {
         'user/reference/rules',
         'user/reference/plugins',
         'user/reference/logs',
-      ],
-    },
-    {
-      type: 'category',
-      label: 'Configuration',
-      collapsed: false,
-      items: [
-        'user/configuration/settings',
-        'user/configuration/about',
+        'user/reference/settings',
+        'user/reference/about',
       ],
     },
   ],

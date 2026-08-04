@@ -13,27 +13,27 @@ A scrollable list with the following cards (from top to bottom):
 
 ### 🟡 Brand Header
 
-- 🟡 **TresorOne logo** (the same `assets/images/logo_TresorOne.png` shipped with the app)
+- 🟡 The app's logo
 - 🟡 **Tresor One** title in the accent color
 - 🏷️ Subtitle: "LLM Gateway Admin"
 
 ### 🛠️ Build Information
 
-A `Card` with label/value pairs of monospace `SelectableText`:
+A card with label/value pairs:
 
-| Label | Source | Example |
-|---|---|---|
-| 🔖 **Version** | `--dart-define=APP_VERSION` if set at build time, else `pubspec.yaml` `version` field | `1.0.0+1` |
-| 🦋 **Flutter SDK** | `flutter --version` at build time | `3.27.1` |
-| 📚 **State Management** | `pubspec.yaml` → `flutter_riverpod` | `^2.5.0` |
-| 🛣️ **Routing** | `pubspec.yaml` → `go_router` | `^14.2.0` |
-| 🎨 **Material Design** | Hard-coded `M3` constant in `core/theme.dart` | `M3` |
+| Label | Example |
+|---|---|
+| 🔖 **Version** | `1.0.0+1` |
+| 🦋 **Flutter SDK** | `3.27.1` |
+| 📚 **State Management** | `^2.5.0` |
+| 🛣️ **Routing** | `^14.2.0` |
+| 🎨 **Material Design** | `M3` |
 
 The version string is also written to a Material badge near the logo so it's visible at a glance.
 
 ### 🔗 Links
 
-A second `Card` with two buttons (each opens in the system browser via `url_launcher`):
+A second card with two buttons (each opens in your default browser):
 
 | Button | URL |
 |---|---|
@@ -44,16 +44,16 @@ A second `Card` with two buttons (each opens in the system browser via `url_laun
 
 > Built with Flutter. TresorOne is licensed under MIT.
 
-The full MIT license text is also bundled in the app's `LICENSE` and accessible via the About screen's footer link in some platforms.
+The full MIT license text is also bundled in the app and accessible via the About screen's footer link in some platforms.
 
 ## 🆘 Where To Get Help
 
 - 🐛 **Bug reports** — open an issue on [TresorOne's GitHub Issues](https://github.com/ladbaby/TresorOne/issues)
 - 💬 **Discussions** — the project's GitHub Discussions tab
-- 🪪 **Daemon-side bugs** — open an issue on [Tresor's GitHub](https://github.com/ladbaby/Tresor/issues) instead
+- 🪪 **Gateway-side bugs** — open an issue on [Tresor's GitHub](https://github.com/ladbaby/Tresor/issues) instead
 
 ## 🔗 Related
 
 - 📚 [Intro](../getting-started/intro.mdx) — what TresorOne is and who it's for
-- ⚙️ [Settings](settings.mdx) — application + daemon configuration
-- 🪟 [Connection Modes](../getting-started/connection-modes.mdx) — how to point TresorOne at a Tresor daemon
+- ⚙️ [Settings](settings.mdx) — application + gateway configuration
+- 🪟 [Connection Modes](../getting-started/connection-modes.mdx) — how to point TresorOne at a Tresor gateway

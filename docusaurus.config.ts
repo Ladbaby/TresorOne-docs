@@ -79,8 +79,8 @@ const config: Config = {
             {label: 'Rules', to: 'docs/user/reference/rules'},
             {label: 'Plugins', to: 'docs/user/reference/plugins'},
             {label: 'Logs', to: 'docs/user/reference/logs'},
-            {label: 'Settings', to: 'docs/user/configuration/settings'},
-            {label: 'About', to: 'docs/user/configuration/about'},
+            {label: 'Settings', to: 'docs/user/reference/settings'},
+            {label: 'About', to: 'docs/user/reference/about'},
           ],
         },
         {

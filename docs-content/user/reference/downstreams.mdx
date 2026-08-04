@@ -9,139 +9,128 @@ A **downstream** is an LLM provider endpoint TresorOne calls on your behalf — 
 
 ## 📐 Responsive List Layout
 
-The Downstreams screen uses a `LayoutBuilder` to choose between two layouts at **720 logical pixels**:
+The Downstreams screen picks one of two layouts based on the window width.
 
-### 🖥️ Wide (≥ 720 px) — Master / Detail
+### 🖥️ Wide — Master / Detail
 
-| Pane | Width | Contents |
-|---|---|---|
-| **Left (master)** | 280 px | Search field, scrollable `ListView` of `_ProviderRow` items, sticky "Add Provider" button at the bottom |
-| **Right (detail)** | Expanded | Selected provider's `DownstreamDetail` (inline-editable) |
+| Pane | Contents |
+|---|---|
+| **Left (master)** | Search field, scrollable list of providers, sticky "Add Provider" button at the bottom |
+| **Right (detail)** | Selected provider's full detail (inline-editable) |
 
 When nothing is selected the right pane shows an empty-state card prompting you to select a provider.
 
-### 📱 Phone (< 720 px) — List-Only
+### 📱 Phone — List-Only
 
-The master pane takes the full width; tapping a row pushes `_DetailOnlyRoute` onto the `Navigator` stack. The visual contract is identical to the wide layout — same widgets, same actions — just on a separate route.
-
-> **Tip:** The split point is tuned for tablets held in portrait mode. Resize the window in development to see both layouts live.
+On a phone-sized window the master pane takes the full width; tapping a row opens the provider's detail on a new page. The visual contract is the same — same actions, just on a separate page.
 
 ## 🔘 Provider Row
 
 Each row in the master list shows:
 
-- 🟢 **`ModelIcon`** — the vendor's logo, resolved through the daemon's `/api/icons/{modelID}` endpoint with a bundled-asset fallback
+- 🟢 **The provider's logo** — fetched automatically
 - 🏷️ **Provider name** (with overflow ellipsis on long names)
-- ✅ **`_OnChip`** — green ON / grey OFF pill indicating whether the provider is enabled
+- ✅ **An ON/OFF pill** — green ON or grey OFF, indicating whether the provider is enabled
 
-A search `TextField` at the top filters by name as you type; the empty state appears when no providers match.
+A search field at the top filters by name as you type; the empty state appears when no providers match.
 
 ## ✏️ Inline-Editable Detail Pane
 
-`DownstreamDetail` is **fully inline-editable** — every field commits to the server on `onEditingComplete` / `onFieldSubmitted` rather than going through a form-then-save flow. From top to bottom the detail pane shows:
+The detail pane is **fully inline-editable** — every field saves as soon as you finish editing it. From top to bottom the pane shows:
 
 ### Header
 
-- 📷 `ModelIcon` for the provider
-- ✏️ Inline `TextFormField` for the **name** — commits when you press Enter or move focus away
-- 🗑️ Delete button — opens a confirmation dialog and cascade-removes references in rules and aliases
+- 📷 The provider's logo
+- ✏️ An inline text field for the **name** — saves when you press Enter or move focus away
+- 🗑️ Delete button — opens a confirmation dialog
 
 ### 🔌 API FORMATS
 
-`Wrap` of `FilterChip`s for the four supported formats:
+A wrap of toggle chips for the four supported formats:
 
-- `openai` — Chat Completions (`/v1/chat/completions`)
-- `openai_responses` — OpenAI Responses API (`/v1/responses`)
-- `anthropic` — Anthropic Messages (`/v1/messages`)
-- `gemini` — Google Gemini (`/v1beta/models/{model}:generateContent`)
+- OpenAI — Chat Completions
+- OpenAI Responses
+- Anthropic — Messages
+- Gemini — generateContent
 
-Each chip has a vendor-logo avatar. Toggling sends a `patch(api_formats: [...])` with the sorted payload so reloads don't get reordered "noisy diffs".
+Each chip has a vendor-logo avatar. Toggling a chip saves immediately.
 
-> **Tip:** Multi-format downstreams let Tresor's auto-translation route requests across protocols without any explicit rule. See the [Tresor user guide](https://ladbaby.github.io/Tresor-docs/docs/user/getting-started/configuration) for the full reference.
+> **Tip:** Multi-format downstreams let the gateway auto-translate between protocols without any explicit rule.
 
 ### 🔑 API KEY
 
-A `Container` with an eye icon. Tapping the eye calls `revealApiKey()` to fetch the unmasked value from the server and show it inline; tapping again hides it. Typing in the field commits the new value on `onEditingComplete`. There's a guard against echoing the revealed value back to the field while you're looking at it.
+A field with an eye icon. Tap the eye to reveal or hide the saved key. Typing a new value and pressing Enter saves the new key.
 
-A **Fetch Models** button is also hosted here — see the Fetch Models dialog below.
+A **Fetch Models** button is hosted here too — see the Fetch Models dialog below.
 
 ### 🌐 API HOST
 
-A `Container` with a link icon + inline `TextFormField`, plus a copy-URL button next to it. The editor validates the URL scheme before saving; the invalid state stays in the form until you fix it.
+A field with a link icon, plus a copy-URL button next to it. The editor validates the URL scheme before saving.
 
 ### 🤖 MODELS
 
-A `SectionHeader` with the model count and a help icon, plus two action buttons:
+A header with the model count and a help icon, plus two action buttons:
 
-- 🔎 **Fetch Models** — spinner while `fetchModels()` runs, then opens the Fetch Models dialog
+- 🔎 **Fetch Models** — spinner while the dialog loads, then opens the Fetch Models window
 - ➕ **Add Model** — reveals an inline input row with **Add** button
 
-Beneath the actions, a responsive `_ModelGrid` renders 1–4 columns depending on available width. Each model is a `_ModelChip` (icon + ID + remove `IconButton`) and is **swipe-to-deletable** via `flutter_slidable` — swipe from right to left to expose the delete action.
+Beneath the actions, a responsive grid renders 1–4 columns depending on available width. Each model is a chip (icon + ID + remove button); swipe a chip to delete it.
 
 ## 📋 Downstream Form (3 Tabs)
 
-The form screen (`/downstreams/new` and `/downstreams/:id`) is a `SegmentedButton`-driven tabbed interface with **three sections** mirroring the Cherry Studio downstream editor. The save/cancel action row lives **outside** the scrollable so it's always reachable.
+The form opens when you create a new provider or edit an existing one. It has **three sections** with a Save/Cancel action row at the bottom.
 
 ### Tab: General
 
 | Field | Required | Notes |
 |---|---|---|
-| 🏷️ Name | ✅ Yes | Min 2 characters. Used as the display name. |
+| 🏷️ Name | ✅ Yes | Min 2 characters. Display name. |
 | 🌐 Base URL | ✅ Yes | Must be a valid URL. Help tooltip explains what goes here (e.g. `https://api.openai.com`). |
-| 🔑 API Key | ◯ Optional | Obscured with visibility toggle. Helper text notes the existing key is hidden by the server. |
+| 🔑 API Key | ◯ Optional | Obscured with visibility toggle. The existing key is hidden by the server. |
 
 ### Tab: Models
 
 | Element | Description |
 |---|---|
 | `SectionHeader` | Title + optional subtitle |
-| 🏷️ Model `Chip` Wrap | Each chip shows `ModelIcon` + model ID + × remove button |
-| ➕ Add Model button | Reveals an inline `TextFormField` + **Add** button |
-| 🔎 Fetch Models button | Calls `fetchModelsForNew()` for an unsaved downstream or `fetchModels()` for a saved one and merges results into the grid |
+| 🏷️ Model `Chip` Wrap | Each chip shows the model icon + model ID + × remove button |
+| ➕ Add Model button | Reveals an inline text field + **Add** button |
+| 🔎 Fetch Models button | Calls **Fetch Models** and merges the results into the grid |
 
 ### Tab: API
 
-`SectionHeader` + the same `Wrap` of `FilterChip`s for the four API formats, with vendor logos. Toggling chips commits immediately when the downstream is saved, or updates the in-memory form when creating new.
+A header + the same wrap of toggle chips for the four API formats, with vendor logos. Toggling chips commits when the provider is saved, or updates the form when creating new.
 
 ### Action Row
 
-- ↩️ **Cancel** — `OutlinedButton`, pops the route
-- ✅ **Create / Save** — `FilledButton`, triggers `_save()` which calls `create()` or `update()` on the provider
-
-> **Tip:** The form keeps `_save()` consistent across new and existing — the screen constructor takes an optional `Downstream` and the same code path handles both.
+- ↩️ **Cancel** — pops the form
+- ✅ **Create / Save** — saves the provider
 
 ## 🔎 Fetch Models Dialog
 
-`FetchModelsDialog` is opened from both the **detail pane** and the form's **Models** tab.
+The Fetch Models window opens from both the **detail pane** and the form's **Models** tab.
 
 | Element | Description |
 |---|---|
 | 🏷️ Title | "Fetch Models from Provider" |
 | 🟢 Status badge | "N added" with an animated counter |
 | ❌ Close | × button (top-right) |
-| 📜 List | Scrollable `ListView` of `_ModelRow` items (icon + model ID + state button) |
-| ⏳ State machine | `_AddButton` → `_AddedPill` (spinner when busy) → error icon on failure |
-| ✅ Done button | Closes the dialog and returns to whatever pane opened it |
+| 📜 List | Scrollable list of model rows (icon + model ID + add/added button) |
+| ✅ Done button | Closes the dialog |
 
-Each `+ Add` button fires a separate `POST /api/downstreams/{id}/models` call so you can pick exactly what to import. Models already on the downstream appear as **Added** (non-tappable) so you don't accidentally add them twice.
+Each `+ Add` button adds just that one model. Models already on the provider show as **Added** so you don't accidentally add them twice.
 
-After every CRUD operation that introduces new model IDs (alias create/update, downstream create/update), the providers **kick off** an icon index refresh so newly-referenced models get their icons on the next render.
+After every CRUD operation that introduces new model IDs (alias create/update, downstream create/update), the app refreshes the icon index so newly-referenced models get their logos on the next render.
 
-## 🌐 Icon Resolution
+## 🖼️ Provider Logos
 
-Model icons are resolved through three layers, in order:
-
-1. **Daemon SVG** — fetched from `/api/icons/{modelID}` via the daemon's icon cache, with token-bucket rate limiting and in-flight coalescing so duplicate model IDs only hit the network once
-2. **Bundled asset** — `IconRegistry.resolveLocal` looks the model ID up in a pattern table that mirrors Tresor's `icons.Resolve` and returns one of `assets/icons/*.svg` (`anthropic.svg`, `openai-completions.svg`, `openai-responses.svg`, `gemini.svg`)
-3. **`auto_awesome_outlined`** — Material icon used when neither source is available
-
-A new provider row gets `auto_awesome_outlined` until you fetch models, at which point the icons refresh and the row switches to a vendor logo if one is recognized.
+Provider logos are fetched automatically. A new provider row shows a generic icon until you fetch models, at which point the icons refresh and the row switches to a vendor logo if one is recognized.
 
 ## 🗑️ Deleting a Downstream
 
-The delete button (top-right of the detail pane header) opens a confirmation dialog. On confirm, TresorOne sends the DELETE call and the daemon performs the cascade:
+The delete button (top-right of the detail pane header) opens a confirmation dialog. On confirm, TresorOne sends the delete call and the gateway also removes:
 
-- 💥 Removes the downstream from rule `match_downstreams` arrays
-- 💥 Deletes any aliases that pointed at it
+- 💥 The provider from any rule that referenced it
+- 💥 Any aliases that pointed at it
 
 A snackbar confirms the deletion and the row disappears from the master list.

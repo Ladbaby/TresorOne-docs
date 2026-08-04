@@ -27,7 +27,7 @@ npm run serve
 │   └── user/            # User-facing documentation
 │       ├── getting-started/
 │       ├── reference/
-│       └── configuration/
+│       └── reference/
 ├── src/                 # Custom CSS, homepage
 ├── static/              # Images, favicon
 ├── docusaurus.config.ts # Site configuration
@@ -37,7 +37,7 @@ npm run serve
 
 ## ✏️ Editing Docs
 
-Docs use MDX format. Internal links should use **relative paths** (e.g., `docs/user/configuration/settings`) — Docusaurus automatically prepends the `baseUrl`.
+Docs use MDX format. Internal links should use **relative paths** (e.g., `docs/user/reference/settings`) — Docusaurus automatically prepends the `baseUrl`.
 
 Style conventions:
 

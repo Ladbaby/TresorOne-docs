@@ -5,17 +5,17 @@ description: Navigate the TresorOne dashboard shell
 
 # 🧭 Dashboard
 
-The **Dashboard** is the home for every connected session. It wraps a `StatefulShellRoute.indexedStack` so each tab keeps its own navigation state, and adapts its layout to the screen size.
+The **Dashboard** is the home for every connected session. Each section keeps its place when you switch tabs, and the layout adapts to the screen size.
 
 ## 📐 Responsive Layout
 
 TresorOne ships three layouts in one widget tree, chosen at runtime by the screen size:
 
-| Size Bucket | Width | Shell |
-|---|---|---|
-| **Desktop** | ≥ 800 logical px | Persistent 240 px sidebar on the left with nav items + mode toggle footer, content on the right |
-| **Tablet** | 600–800 logical px | Collapsible sidebar with hamburger toggle, app bar title + connection indicator |
-| **Mobile** | < 600 logical px | Bottom `NavigationBar` (4 primary tabs: Downstreams, Aliases, Rules, Settings) + mode toggle popup in app bar |
+| Size Bucket | Shell |
+|---|---|
+| **Desktop** | Persistent sidebar on the left with nav items + mode toggle footer, content on the right |
+| **Tablet** | Collapsible sidebar with hamburger toggle, app bar title + connection indicator |
+| **Mobile** | Bottom navigation bar (4 primary tabs: Downstreams, Aliases, Rules, Settings) + mode toggle popup in app bar |
 
 :::tip
 The boundaries are intentionally generous — TresorOne is a desktop-first client, so the **desktop** layout kicks in on tablets held in landscape mode, small laptops, and most external displays. Drag the window around to see the layout flip.
@@ -25,11 +25,11 @@ The boundaries are intentionally generous — TresorOne is a desktop-first clien
 
 Every layout shares the same three pieces:
 
-### `CustomWindowTitleBar`
+### Custom Window Title Bar
 
 A draggable title bar at the very top of the window on desktop builds. Lets you grab the window (drag) and shows the connected endpoint on the right (clickable to open the Remote Connect Dialog).
 
-### `ConnectionIndicator`
+### Connection Indicator
 
 A colored dot + hostname displayed in the sidebar header (desktop) or app bar (tablet/mobile):
 
@@ -39,35 +39,35 @@ A colored dot + hostname displayed in the sidebar header (desktop) or app bar (t
 
 Tapping the indicator when in Remote Mode opens the Remote Connect Dialog.
 
-### `_ReconnectBanner`
+### Reconnect Banner
 
-A `MaterialBanner` that slides in at the top of the dashboard when the connection drops. Offers two actions:
+A banner that slides in at the top of the dashboard when the connection drops. Offers two actions:
 
-- 🔄 **Reconnect** — re-runs `tryReconnect` against the saved endpoint + password
+- 🔄 **Reconnect** — re-runs the connection against the saved endpoint + password
 - ✕ **Dismiss** — hides the banner; you can re-trigger reconnect from the sidebar
 
 The banner auto-disappears the moment the connection comes back.
 
-### `_buildModeToggle`
+### Mode Toggle
 
-Two `TextButton`s in the sidebar footer — **Local** and **Remote** — with the active mode highlighted in the accent color. Tapping the alternate mode shows a confirmation dialog (since switching ends the active connection) and then either opens the Local Mode Progress Dialog or the Remote Connect Dialog.
+Two buttons in the sidebar footer — **Local** and **Remote** — with the active mode highlighted. Tapping the alternate mode shows a confirmation dialog (since switching ends the active connection) and then either opens the Local Mode Progress Dialog or the Remote Connect Dialog.
 
 ## 🧭 Navigation
 
 ### Desktop / tablet sidebar items
 
-| Item | Route | Purpose |
-|---|---|---|
-| 🔌 Downstreams | `/downstreams` | Provider list + detail + form |
-| 🏷️ Aliases | `/aliases` | Model routing rules |
-| 📏 Rules | `/rules` | Request transformation rules |
-| 📜 Logs | `/logs` | Live log stream + payload inspector |
-| ⚙️ Settings | `/settings` | Global daemon + app settings |
-| ℹ️ About | `/about` | Version, build info, links |
+| Item | Purpose |
+|---|---|
+| 🔌 Downstreams | Provider list + detail + form |
+| 🏷️ Aliases | Model routing rules |
+| 📏 Rules | Request transformation rules |
+| 📜 Logs | Live log stream + payload inspector |
+| ⚙️ Settings | Global gateway + app settings |
+| ℹ️ About | Version, build info, links |
 
 ### Mobile bottom nav
 
-The mobile `NavigationBar` collapses the desktop sidebar into 4 primary destinations:
+The mobile navigation bar collapses the desktop sidebar into 4 primary destinations:
 
 - **Downstreams** (with the same icon)
 - **Aliases**
@@ -78,25 +78,21 @@ Logs, About, and the Plugins subsection of Rules are reachable through the **Set
 
 ## 🚪 Tab State Preservation
 
-`StatefulShellRoute.indexedStack` keeps each tab's `_Navigator` alive while you're inside the shell. That means:
+Each section keeps its place when you switch tabs — scrolling position in the Log viewer doesn't reset, the selected provider stays selected across tab switches, and open form routes survive until you explicitly close them.
 
-- Scrolling position in the Log viewer doesn't reset when you flip to Settings and back
-- Selected downstream stays selected across tab switches
-- Open alias-form routes survive until you explicitly close them
-
-When you sign out or the connection drops entirely, navigation falls back to `/connect`.
+When you sign out or the connection drops entirely, navigation falls back to the Connect screen.
 
 ## 🪟 System Tray (Desktop Only)
 
-On Windows / macOS / Linux, minimizing the window moves it into a **system tray icon** managed by `SystemTrayWidget`:
+On Windows / macOS / Linux, minimizing the window moves it into a **system tray icon**:
 
 | Action | Behavior |
 |---|---|
 | 👆 **Left-click tray icon** | Restore window |
 | 📋 **Right-click → Show** | Restore window |
-| 📋 **Right-click → Exit** | Quit TresorOne; if in Local Mode, send SIGTERM to the daemon first |
-| 🪟 **Close window** | Hide to tray (Windows: depends on `silent_launch` setting in **Settings → Application**) |
-| ⏰ **Auto-launch** | On Windows, registers a scheduled task at `%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup`; on macOS, registers via the `launch_at_startup` package's LaunchAtLogin helper; on Linux, drops a `.desktop` file in `~/.config/autostart` |
+| 📋 **Right-click → Exit** | Quit TresorOne; if in Local Mode, the gateway is stopped first |
+| 🪟 **Close window** | Hide to tray (Windows: depends on the **Silent Launch** option in **Settings → Application**) |
+| ⏰ **Auto-launch** | TresorOne starts on login (Windows: startup task · macOS: login item · Linux: autostart entry) |
 
 Mobile builds (Android / iOS) follow the platform's normal app-lifecycle rules — there is no tray and no auto-launch toggle.
 
@@ -105,7 +101,7 @@ Mobile builds (Android / iOS) follow the platform's normal app-lifecycle rules �
 - **Downstreams** — type in the search field to filter the provider list by name
 - **Aliases** — drag a group header up or down to reorder; collapses on tap
 - **Rules** — toggle a switch inline to enable/disable without opening the form
-- **Logs** — the filter bar at the top matches against model, resolved model, path, downstream name/ID, error message, alias group, method, status code, and log level simultaneously
+- **Logs** — the filter bar at the top matches against model, path, downstream, status, error, and other fields simultaneously
 
 ## 🚦 Next Steps
 
@@ -115,4 +111,4 @@ Once you're comfortable in the shell, dive into one of the reference pages:
 - 🏷️ [Aliases](../reference/aliases.mdx) — model routing rules
 - 📏 [Rules](../reference/rules.mdx) — pipelines and plugins
 - 📺 [Logs](../reference/logs.mdx) — live traffic + payload inspection
-- ⚙️ [Settings](../configuration/settings.mdx) — configure global behaviour
+- ⚙️ [Settings](../reference/settings.mdx) — configure global behaviour
