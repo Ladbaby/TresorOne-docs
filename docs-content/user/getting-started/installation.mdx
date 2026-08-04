@@ -17,9 +17,9 @@ Pick the row that matches your platform from the table below and click the asset
 | Platform | Asset | Type | Notes |
 |---|---|---|---|
 | 🪟 **Windows** | [Setup (x64)](https://github.com/ladbaby/TresorOne/releases/latest) | `TresorOne-windows-x64-setup.exe` | Standard installer; places the app under `%LOCALAPPDATA%\Programs\TresorOne\` and adds a Start Menu + desktop shortcut |
-| 🪟 **Windows (portable)** | [Portable (x64)](https://github.com/ladbaby/TresorOne/releases/latest) | `TresorOne-windows-x64-portable.zip` | No installer — unzip and run `tresor_one.exe` from anywhere; useful on machines where you can't install |
+| 🪟 **Windows (portable)** | [Portable (x64)](https://github.com/ladbaby/TresorOne/releases/latest) | `TresorOne-windows-x64-portable.zip` | No installer — unzip and run `TresorOne.exe` from anywhere; useful on machines where you can't install |
 | 🍎 **macOS** | [Universal](https://github.com/ladbaby/TresorOne/releases/latest) | `TresorOne-macos-universal.tar.gz` | Single universal binary (Intel + Apple Silicon); extract and drag `TresorOne.app` into **Applications** |
-| 🐧 **Linux** | [tar.gz (x64)](https://github.com/ladbaby/TresorOne/releases/latest) | `TresorOne-linux-x64.tar.gz` | x86_64 tarball; extract and run the bundled `tresor_one` binary |
+| 🐧 **Linux** | [tar.gz (x64)](https://github.com/ladbaby/TresorOne/releases/latest) | `TresorOne-linux-x64.tar.gz` | x86_64 tarball; extract and run the bundled `TresorOne` binary |
 | 🤖 **Android** | [arm64](https://github.com/ladbaby/TresorOne/releases/latest) | `TresorOne-android-arm64-release.apk` | arm64-only sideload APK. Install by opening the file on the device |
 | 🍎 **iOS** | TestFlight (separate program) | — | iOS builds are not published as release assets — request TestFlight access through a [GitHub issue](https://github.com/ladbaby/TresorOne/issues) |
 
@@ -31,7 +31,7 @@ Click **"… download all" → "Download as zip"** in the GitHub UI to grab the 
 
 - **Windows users** — start with the **Setup** installer unless you need to keep the app on a USB stick or run from a folder you fully control (corporate machines, restricted accounts); in that case use the **Portable** zip.
 - **macOS users on Apple Silicon** — the **Universal** tarball is the right pick regardless of architecture. Do **not** look for an `aarch64`-specific artifact; there isn't one.
-- **Linux users** — there is no `.deb`, `.rpm`, or `.AppImage` in the release. Extract the tarball anywhere on your `$PATH` (e.g. `~/.local/bin/`) and run `tresor_one`.
+- **Linux users** — there is no `.deb`, `.rpm`, or `.AppImage` in the release. Extract the tarball anywhere on your `$PATH` (e.g. `~/.local/bin/`) and run `TresorOne`.
 
 ## 🚀 Install Steps per Platform
 
@@ -43,7 +43,7 @@ Click **"… download all" → "Download as zip"** in the GitHub UI to grab the 
   </TabItem>
   <TabItem value="windows-portable" label="Windows (Portable)">
     1. Extract `TresorOne-windows-x64-portable.zip` to a folder of your choice (e.g. `C:\Apps\TresorOne\`)
-    2. Double-click `tresor_one.exe` to launch
+    2. Double-click `TresorOne.exe` to launch
     3. (Optional) Pin the executable to the Start Menu or taskbar for future use
   </TabItem>
   <TabItem value="macos" label="macOS">
